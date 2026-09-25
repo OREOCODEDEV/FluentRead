@@ -233,7 +233,9 @@ async function runChild(options) {
             cwd: PROJECT_ROOT,
             env,
             stdio: 'inherit',
-            shell: false,
+            // Windows 上 wxt、vitest 等是 node_modules/.bin 里的 .cmd shim，
+            // spawn 不经 shell 不做 PATHEXT 解析，会以 ENOENT 失败；交给 cmd.exe 解析。
+            shell: process.platform === 'win32',
             detached: process.platform !== 'win32',
         });
         const signalHandlers = new Map(['SIGINT', 'SIGTERM', 'SIGHUP'].map(signal =>
@@ -269,7 +271,9 @@ async function main(argv = process.argv.slice(2)) {
     }
 }
 
-if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
+// Windows 下 process.argv[1] 是盘符反斜杠路径，直接拼 file:// 永远不等于
+// import.meta.url；用 fileURLToPath 两边都还原为文件系统路径再比较。
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
     main().then((code) => {
         process.exitCode = code;
     }).catch(async (error) => {

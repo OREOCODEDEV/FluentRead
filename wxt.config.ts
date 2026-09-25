@@ -204,7 +204,8 @@ export default defineConfig({
             const ttsOrtDist = resolvePnpmDependencyDist('node_modules/@huggingface/transformers-kokoro', 'onnxruntime-web');
             files.push({absoluteSrc: packageWasmDiagnostics(__dirname, resolve(ttsOrtDist, 'ort-wasm-simd-threaded.asyncify.mjs'), 'tts-ort-wasm-simd-threaded.asyncify.mjs', 'onnx'), relativeDest: 'fluent-read-ai/tts-ort-wasm-simd-threaded.asyncify.mjs'});
             files.push({absoluteSrc: resolve(ttsOrtDist, 'ort-wasm-simd-threaded.asyncify.wasm'), relativeDest: 'fluent-read-ai/tts-ort-wasm-simd-threaded.asyncify.wasm'});
-            const ocrCore = files.find(file => file.relativeDest === 'fluent-read-ocr/core/tesseract-core-simd-lstm.wasm.js');
+            // Windows 上 WXT 传入的 relativeDest 是反斜杠路径，统一按正斜杠比较。
+            const ocrCore = files.find(file => file.relativeDest.replace(/\\/g, '/') === 'fluent-read-ocr/core/tesseract-core-simd-lstm.wasm.js');
             if (!ocrCore || !('absoluteSrc' in ocrCore)) throw new Error('Missing packaged OCR core');
             ocrCore.absoluteSrc = packageWasmDiagnostics(__dirname, ocrCore.absoluteSrc, 'tesseract-core-simd-lstm.wasm.js', 'tesseract');
         },
